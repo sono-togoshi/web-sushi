@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おすし屋さん</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#shop {
+    width: 1000px;
+    height: 500px;
+    position: relative;
+    overflow: hidden;
+    background-image: url("background/sushi-background.png");
+    background-size: 100% 100%;
+    background-position: center;
+}
+
+.shelf {
+    position: absolute;
+    left: 10%;
+    width: 80%;
+    height: 15%;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    align-items: end;
+    justify-items: center;
+}
+
+.shelf img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+#topShelf {
+    top: 22%;
+}
+
+#middleShelf {
+    top: 44%;
+}
+
+#bottomShelf {
+    top: 66%;
+}
+
+#drawButton {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 10;
+    padding: 10px 16px;
+    border: 2px solid white;
+    border-radius: 20px;
+    background: #e879a9;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="shop">
+
+    <div class="shelf" id="topShelf"></div>
+    <div class="shelf" id="middleShelf"></div>
+    <div class="shelf" id="bottomShelf"></div>
+
+    <button id="drawButton"
+        onclick="location.href='draw.html'">
+        すしをにぎる
+    </button>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL = "https://yapohmzbgojtaygfceel.supabase.co";
+
+const SUPABASE_KEY = "sb_publishable_LzzA7XlGG4Q6qGQDpf8_mA_FZepVODX";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+async function loadSushis() {
+
+    const { data, error } = await supabaseClient
+        .from("sushi")
+        .select("slot,image_path")
+        .order("slot");
+
+    if (error) {
+        console.error("すしの読み込みエラー:", error);
+        return;
+    }
+
+    const shelves = [
+        document.getElementById("topShelf"),
+        document.getElementById("middleShelf"),
+        document.getElementById("bottomShelf")
+    ];
+
+    shelves.forEach(shelf => shelf.innerHTML = "");
+
+    data.forEach(item => {
+
+        const sushi = document.createElement("img");
+
+        sushi.src =
+            SUPABASE_URL +
+            "/storage/v1/object/public/sushi-images/" +
+            item.image_path;
+
+        sushi.alt = "すし";
+
+        sushi.onerror = function() {
+            console.error("すし画像を読み込めません:", sushi.src);
+        };
+
+        const shelfIndex = Math.floor((item.slot - 1) / 5);
+
+        if (shelfIndex >= 0 && shelfIndex < 3) {
+            shelves[shelfIndex].appendChild(sushi);
+        }
+    });
+}
+
+loadSushi();
+
+</script>
+
+</body>
+</html>
